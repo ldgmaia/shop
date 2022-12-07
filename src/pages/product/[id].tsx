@@ -1,9 +1,11 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import Image from 'next/image'
-import { useRouter } from 'next/router'
+// import { useRouter } from 'next/router'
 import Stripe from 'stripe'
+import axios from 'axios'
 import { stripe } from '../../lib/stripe'
 import { ImageContainer, ProductContainer, ProductDetails } from '../../styles/pages/product'
+import { useState } from 'react'
 
 interface ProductProps {
   product: {
@@ -11,17 +13,42 @@ interface ProductProps {
     name: string
     imageUrl: string
     price: string,
-    description: string
+    description: string,
+    defaultPriceId: string
   }
 }
 
 export default function Product({ product }: ProductProps) {
 
-  const { isFallback } = useRouter()
+  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false)
 
-  if (isFallback) {
-    return <p>loading....</p>
+  // const router = useRouter()
+
+  async function handleBuyProduct() {
+    try {
+      setIsCreatingCheckoutSession(true)
+
+      const response = await axios.post('/api/checkout', {
+        priceId: product.defaultPriceId
+      })
+
+      const { checkoutUrl } = response.data
+
+      // router.push('/checkout') //redirect to internal URL
+      window.location.href = checkoutUrl //redirect to external URL
+
+    } catch (error) {
+      //TO-DO: integrate with Sentry
+      alert('error redirecting checkout')
+      setIsCreatingCheckoutSession(false)
+    }
   }
+
+  // const { isFallback } = useRouter()
+
+  // if (isFallback) {
+  //   return <p>loading....</p>
+  // }
 
   return (
     <ProductContainer>
@@ -33,7 +60,7 @@ export default function Product({ product }: ProductProps) {
         <h1>{product.name}</h1>
         <span>{product.price}</span>
         <p>{product.description}</p>
-        <button>
+        <button disabled={isCreatingCheckoutSession} onClick={handleBuyProduct}>
           Buy it now
         </button>
       </ProductDetails>
@@ -71,7 +98,8 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({ para
           style: 'currency',
           currency: 'CAD'
         }).format(price.unit_amount! / 100),
-        description: product.description
+        description: product.description,
+        defaultPriceId: price.id
       }
     },
     revalidate: 60 * 60 * 1, //1 hour

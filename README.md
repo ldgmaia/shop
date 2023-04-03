@@ -1,6 +1,7 @@
 # Shop
 
-This SPA side project is a e-commerce-like web site, with shopping cart feature implementing the Next.js framework, with server-side rendering (SSR) and static-site generation (SSG).
+This SPA project is an e-commerce-like web site, with shopping cart feature implemented with Next.js framework, server-side rendering (SSR), and static-site generation (SSG).
+
 In this project I used: 
 - ReactJs
 - Axios
